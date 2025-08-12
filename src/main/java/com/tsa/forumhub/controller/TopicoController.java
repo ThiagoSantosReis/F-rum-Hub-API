@@ -54,5 +54,29 @@ public class TopicoController {
 
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<?> atualizarTopico(@PathVariable("id") Long id, @Valid @RequestBody DadosRequestTopico dados){
+        Optional<Topico> opt = repository.findById(id);
+        if(opt.isEmpty()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Erro: Tópico não encontrado");
+        }
+
+        Optional<Topico> duplicado = repository.findByTituloAndMensagem(dados.titulo(), dados.mensagem());
+
+        if(duplicado.isPresent() && !duplicado.get().getId().equals(id)){
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Erro: Tópico duplicado");
+        }
+
+        Topico topico = opt.get();
+        topico.setTitulo(dados.titulo());
+        topico.setMensagem(dados.mensagem());
+        topico.setAutor(dados.autor());
+        topico.setCurso(dados.curso());
+
+        repository.save(topico);
+
+        return ResponseEntity.ok(new DadosResponseTopico(topico));
+    }
+
 
 }
