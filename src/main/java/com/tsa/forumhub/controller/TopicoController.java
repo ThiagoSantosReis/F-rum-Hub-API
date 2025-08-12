@@ -25,7 +25,7 @@ public class TopicoController {
     public ResponseEntity<?> criarTopico(@Valid @RequestBody DadosRequestTopico dados){
         boolean topicoExistente = repository.findByTituloAndMensagem(dados.titulo(), dados.mensagem()).isPresent();
         if(topicoExistente){
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Tópico já existente.");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Erro: Tópico já existente.");
         }
 
         Topico topicoSalvo = repository.save(new Topico(dados));
@@ -44,7 +44,15 @@ public class TopicoController {
         return ResponseEntity.ok(responsePage);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<?> detalharTopico(@PathVariable("id") Long id){
+        Optional<Topico> topicoOpt = repository.findById(id);
+        if(topicoOpt.isEmpty()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Erro: Tópico não encontrado");
+        }
+        return ResponseEntity.ok(new DadosResponseTopico(topicoOpt.get()));
 
+    }
 
 
 }
