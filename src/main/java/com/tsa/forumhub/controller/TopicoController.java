@@ -78,5 +78,15 @@ public class TopicoController {
         return ResponseEntity.ok(new DadosResponseTopico(topico));
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deletarTopico(@PathVariable("id") Long id){
+        Optional<Topico> opt = repository.findById(id);
+        if(opt.isEmpty()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Erro: Tópico não encontrado");
+        }
+        repository.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
 
 }
