@@ -29,7 +29,6 @@ public class SecurityFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        // Ignorar rotas públicas
         if (path.equals("/login") || path.equals("/usuarios")) {
             filterChain.doFilter(request, response);
             return;
