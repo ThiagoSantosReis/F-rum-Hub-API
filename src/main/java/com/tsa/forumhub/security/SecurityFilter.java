@@ -1,5 +1,6 @@
 package com.tsa.forumhub.security;
 
+import com.tsa.forumhub.model.Usuario;
 import com.tsa.forumhub.repository.UsuarioRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -16,25 +17,36 @@ import java.io.IOException;
 
 @Component
 public class SecurityFilter extends OncePerRequestFilter {
+
     @Autowired
-    private  TokenService tokenService;
+    private TokenService tokenService;
+
     @Autowired
     private UsuarioRepository usuarioRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+
+        String path = request.getRequestURI();
+
+        // Ignorar rotas públicas
+        if (path.equals("/login") || path.equals("/usuarios")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String authHeader = request.getHeader("Authorization");
         String token = null;
 
-        if(authHeader != null && authHeader.startsWith("Bearer ")){
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
         }
 
-        if(token != null && SecurityContextHolder.getContext().getAuthentication() == null){
-            String username = tokenService.getSubject(token);
-            if(username!=null){
-                var usuario = usuarioRepository.findByLogin(username).orElse(null);
-                if(usuario!=null){
+        if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            String username = tokenService.getSubject(token); // extrai login do token
+            if (username != null) {
+                Usuario usuario = usuarioRepository.findByLogin(username).orElse(null);
+                if (usuario != null) {
                     var authToken = new UsernamePasswordAuthenticationToken(usuario, null, usuario.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
@@ -43,6 +55,5 @@ public class SecurityFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
-
     }
 }
